@@ -1,0 +1,55 @@
+name: Auto Build AI Assistant APK
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # دستی ران کن از Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: Accept SDK Licenses
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        sdk-version: '34'
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y wget unzip
+
+    - name: Run Auto-Build Script
+      run: |
+        chmod +x auto-build.sh
+        ./auto-build.sh
+
+    - name: Run Full-Build Script
+      run: |
+        chmod +x full-build.sh
+        ./full-build.sh
+
+    - name: Build APK with Gradle
+      run: |
+        cd AutoAssistantAI
+        chmod +x gradlew
+        ./gradlew assembleDebug
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ai-assistant-apk
+        path: AutoAssistantAI/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
